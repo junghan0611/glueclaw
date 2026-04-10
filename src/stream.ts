@@ -18,10 +18,7 @@ const sessionMap = new Map<string, string>();
 try {
   const saved = JSON.parse(readFileSync(SESSION_FILE, "utf8"));
   for (const [k, v] of Object.entries(saved)) sessionMap.set(k, v as string);
-  console.log(`[glueclaw] loaded ${sessionMap.size} session(s) from ${SESSION_FILE}`);
-} catch (e) {
-  console.log(`[glueclaw] no sessions loaded from ${SESSION_FILE}: ${e}`);
-}
+} catch {}
 
 function persistSessions() {
   try {
@@ -124,10 +121,6 @@ export function createClaudeCliStreamFn(opts: {
         if (resolvedModel) args.push("--model", resolvedModel);
 
         // Debug: log args for resume troubleshooting
-        const logArgs = args.filter(a => a !== cleanPrompt).join(" ");
-        console.log(`[glueclaw] spawn: claude ${logArgs} ${existingSessionId ? "(resume)" : "(new)"}`);
-
-
         // Extract user message and scrub it too
         const lastUser = [...(context.messages ?? [])].reverse().find(m => m.role === "user");
         let prompt = "";
