@@ -44,6 +44,10 @@ Switch in TUI: `/model glueclaw/glueclaw-opus`
 - Switching between GlueClaw and other backends (e.g. Codex) works seamlessly via `/model`
 - The installer patches one file in OpenClaw's dist (`server-*.js`) to expose the MCP loopback token to plugins. A `.glueclaw-bak` backup is created. Updating OpenClaw (`npm install -g openclaw`) restores the original - just re-run `bash install.sh` to re-apply the patch.
 
+## Disclaimer
+
+This project uses only official, documented Claude Code CLI flags. No reverse engineering, no credential extraction, no API spoofing. It's your Max subscription, your `claude` binary, your machine. Use at your own risk. Not affiliated with or endorsed by Anthropic or OpenClaw.
+
 ## Uninstall
 
 Switch to another model and restore the patched file from backup:
