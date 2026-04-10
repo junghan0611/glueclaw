@@ -110,16 +110,17 @@ export function createClaudeCliStreamFn(opts: {
           "--output-format", "stream-json",
           "--verbose", "--include-partial-messages",
         ];
-        if (cleanPrompt) args.push("--system-prompt", cleanPrompt);
-        if (resolvedModel) args.push("--model", resolvedModel);
-
         // Resume session for multi-turn conversation memory
         const sessionKey = `glueclaw:${opts.sessionKey ?? "default"}`;
         const existingSessionId = sessionMap.get(sessionKey);
-        const isResume = !!existingSessionId;
         if (existingSessionId) {
+          // Resuming: don't pass --system-prompt, the session already has it
           args.push("--resume", existingSessionId);
+        } else {
+          // New session: pass the scrubbed system prompt
+          if (cleanPrompt) args.push("--system-prompt", cleanPrompt);
         }
+        if (resolvedModel) args.push("--model", resolvedModel);
 
         // Extract user message and scrub it too
         const lastUser = [...(context.messages ?? [])].reverse().find(m => m.role === "user");
