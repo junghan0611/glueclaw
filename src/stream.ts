@@ -10,7 +10,8 @@ import type { AssistantMessage, Usage, TextContent } from "@mariozechner/pi-ai";
 
 /** Track claude session IDs per session key for multi-turn resume.
  *  Persisted to disk so sessions survive gateway restarts. */
-const SESSION_FILE = join(tmpdir(), "glueclaw-sessions.json");
+const GC_HOME = join(process.env.HOME ?? tmpdir(), ".glueclaw");
+const SESSION_FILE = join(GC_HOME, "sessions.json");
 const sessionMap = new Map<string, string>();
 
 // Load persisted sessions on startup
@@ -147,7 +148,10 @@ export function createClaudeCliStreamFn(opts: {
           env.OPENCLAW_MCP_MESSAGE_CHANNEL = "";
         }
 
-        const proc = spawn(claudeBin, args, { stdio: ["pipe", "pipe", "pipe"], cwd: "/tmp", env });
+        // Use persistent dir so claude sessions survive restarts
+        const gcHome = join(process.env.HOME ?? "/tmp", ".glueclaw");
+        mkdirSync(gcHome, { recursive: true });
+        const proc = spawn(claudeBin, args, { stdio: ["pipe", "pipe", "pipe"], cwd: gcHome, env });
         if (options?.signal) options.signal.addEventListener("abort", () => proc.kill("SIGTERM"));
 
         const info = { api: String(model.api ?? "anthropic-messages"), provider: String(model.provider ?? "glueclaw"), id: String(model.id) };
