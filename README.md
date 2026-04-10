@@ -12,6 +12,20 @@ Requires [OpenClaw](https://docs.openclaw.ai) and [Claude Code](https://claude.a
 git clone https://github.com/zeulewan/glueclaw.git && cd glueclaw && bash install.sh
 ```
 
+## How it works
+
+Uses the official Claude CLI:
+
+```
+claude --dangerously-skip-permissions -p \
+    --output-format stream-json \
+    --verbose --include-partial-messages \
+    --system-prompt <scrubbed prompt> \
+    --model <model> \
+    --resume <session-id> \
+    "<user message>"
+```
+
 ## Models
 
 | Model | Claude Model | Context |
