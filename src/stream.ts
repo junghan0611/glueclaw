@@ -149,6 +149,8 @@ export function createClaudeCliStreamFn(opts: {
           stream.push({ type: "text_start", contentIndex: 0, partial: p });
         };
 
+        let streamed = false; // true if text was delivered via text_delta events
+
         const endStream = (usage?: Record<string, number>) => {
           if (ended) return;
           ended = true;
@@ -159,7 +161,9 @@ export function createClaudeCliStreamFn(opts: {
           if (started) {
             stream.push({ type: "text_end", contentIndex: 0, content: text, partial: buildMsg(info, text, buildUsage(usage)) });
           }
-          stream.push({ type: "done", reason: "stop", message: buildMsg(info, text || "(no response)", buildUsage(usage)) });
+          // Only include text in done if it wasn't already streamed
+          const doneText = streamed ? "" : (text || "(no response)");
+          stream.push({ type: "done", reason: "stop", message: buildMsg(info, doneText, buildUsage(usage)) });
         };
 
         const rl = createInterface({ input: proc.stdout! });
@@ -183,6 +187,7 @@ export function createClaudeCliStreamFn(opts: {
             const delta = (data.event as any)?.delta;
             if (delta?.type === "text_delta" && delta.text) {
               startStream();
+              streamed = true;
               text += delta.text;
               stream.push({ type: "text_delta", contentIndex: 0, delta: delta.text, partial: buildMsg(info, text, buildUsage()) });
             }
