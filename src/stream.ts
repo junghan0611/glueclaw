@@ -18,7 +18,10 @@ const sessionMap = new Map<string, string>();
 try {
   const saved = JSON.parse(readFileSync(SESSION_FILE, "utf8"));
   for (const [k, v] of Object.entries(saved)) sessionMap.set(k, v as string);
-} catch {}
+  console.log(`[glueclaw] loaded ${sessionMap.size} session(s) from ${SESSION_FILE}`);
+} catch (e) {
+  console.log(`[glueclaw] no sessions loaded from ${SESSION_FILE}: ${e}`);
+}
 
 function persistSessions() {
   try {
