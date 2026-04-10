@@ -183,7 +183,8 @@ export function createClaudeCliStreamFn(opts: {
           text = text.replace(/GLUECLAW_ACK/g, "HEARTBEAT_OK");
           text = text.replace(/reply_current/g, "reply_to_current");
           text = text.replace(/\[\[reply:/g, "[[reply_to:");
-          if (started) {
+          if (started && !streamed) {
+            // Only emit text_end if text wasn't already delivered via streaming deltas
             stream.push({ type: "text_end", contentIndex: 0, content: text, partial: buildMsg(info, text, buildUsage(usage)) });
           }
           stream.push({ type: "done", reason: "stop", message: buildMsg(info, text || "(no response)", buildUsage(usage)) });
