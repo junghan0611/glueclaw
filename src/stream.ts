@@ -202,8 +202,10 @@ export function createClaudeCliStreamFn(opts: {
             if (delta?.type === "text_delta" && delta.text) {
               startStream();
               streamed = true;
-              text += delta.text;
-              stream.push({ type: "text_delta", contentIndex: 0, delta: delta.text, partial: buildMsg(info, text, buildUsage()) });
+              // Translate renamed tokens back in streaming deltas
+              const dt = delta.text.replace(/reply_current/g, "reply_to_current").replace(/\[\[reply:/g, "[[reply_to:");
+              text += dt;
+              stream.push({ type: "text_delta", contentIndex: 0, delta: dt, partial: buildMsg(info, text, buildUsage()) });
             }
             continue;
           }
