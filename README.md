@@ -26,6 +26,8 @@ claude --dangerously-skip-permissions -p \
     "<user message>"
 ```
 
+For this to stop working, they'd have to block the json streaming mode or the custom system prompt mode. 
+
 ## Models
 
 | Model | Claude Model | Context |
