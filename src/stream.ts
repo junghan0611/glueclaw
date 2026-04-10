@@ -8,8 +8,22 @@ import { createAssistantMessageEventStream } from "@mariozechner/pi-ai";
 import type { StreamFn } from "@mariozechner/pi-agent-core";
 import type { AssistantMessage, Usage, TextContent } from "@mariozechner/pi-ai";
 
-/** Track claude session IDs per session key for multi-turn resume. */
+/** Track claude session IDs per session key for multi-turn resume.
+ *  Persisted to disk so sessions survive gateway restarts. */
+const SESSION_FILE = join(tmpdir(), "glueclaw-sessions.json");
 const sessionMap = new Map<string, string>();
+
+// Load persisted sessions on startup
+try {
+  const saved = JSON.parse(readFileSync(SESSION_FILE, "utf8"));
+  for (const [k, v] of Object.entries(saved)) sessionMap.set(k, v as string);
+} catch {}
+
+function persistSessions() {
+  try {
+    writeFileSync(SESSION_FILE, JSON.stringify(Object.fromEntries(sessionMap)));
+  } catch {}
+}
 
 function buildUsage(raw?: Record<string, number>): Usage {
   return {
@@ -178,7 +192,7 @@ export function createClaudeCliStreamFn(opts: {
           // Capture session ID for resume
           if (type === "system" && data.subtype === "init") {
             const sid = data.session_id as string;
-            if (sid) sessionMap.set(sessionKey, sid);
+            if (sid) { sessionMap.set(sessionKey, sid); persistSessions(); }
             continue;
           }
 
@@ -214,7 +228,7 @@ export function createClaudeCliStreamFn(opts: {
           // Result event (final) - authoritative response
           if (type === "result") {
             const sid = data.session_id as string;
-            if (sid) sessionMap.set(sessionKey, sid);
+            if (sid) { sessionMap.set(sessionKey, sid); persistSessions(); }
             // Only use result text if nothing came through streaming or assistant
             if (!text) {
               const resultText = data.result as string;
