@@ -1,10 +1,11 @@
-# GlueClaw Test Procedures
+# Test Procedures
 
 ## Quick smoke test
 
 ```bash
 export GLUECLAW_KEY=local
-openclaw agent --agent main --message "say banana" 2>&1 | tail -1
+openclaw agent --agent main --message "say banana" \
+  2>&1 | tail -n 1
 # Expected: banana
 ```
 
@@ -24,17 +25,22 @@ openclaw agent --agent main --message "say banana" 2>&1 | tail -1
 export GLUECLAW_KEY=local
 
 # GlueClaw
-openclaw agent --agent main --message "say 'I am glueclaw'" 2>&1 | tail -1
+openclaw agent --agent main \
+  --message "say 'I am glueclaw'" 2>&1 | tail -n 1
 # Expected: I am glueclaw
 
 # Switch to Codex
-openclaw config set agents.defaults.model openai-codex/gpt-5.4
-openclaw agent --agent main --message "say 'I am codex'" 2>&1 | tail -1
+openclaw config set agents.defaults.model \
+  openai-codex/gpt-5.4
+openclaw agent --agent main \
+  --message "say 'I am codex'" 2>&1 | tail -n 1
 # Expected: I am codex
 
 # Switch back
-openclaw config set agents.defaults.model glueclaw/glueclaw-sonnet
-openclaw agent --agent main --message "say 'I am glueclaw again'" 2>&1 | tail -1
+openclaw config set agents.defaults.model \
+  glueclaw/glueclaw-sonnet
+openclaw agent --agent main \
+  --message "say 'I am glueclaw again'" 2>&1 | tail -n 1
 # Expected: I am glueclaw again
 ```
 
@@ -51,7 +57,8 @@ openclaw agent --agent main --message "say 'I am glueclaw again'" 2>&1 | tail -1
 ```bash
 # In openclaw tui:
 > what MCP tools do you have access to from openclaw?
-# Expected: list including message, sessions_list, memory_search, web_search, etc.
+# Expected: list including message, sessions_list,
+#   memory_search, web_search, etc.
 ```
 
 ## Detection check
@@ -63,11 +70,14 @@ claude -p "say hi" 2>&1
 
 # Should pass (scrubbed GlueClaw prompt)
 export GLUECLAW_KEY=local
-openclaw agent --agent main --message "say hi" 2>&1 | tail -1
+openclaw agent --agent main \
+  --message "say hi" 2>&1 | tail -n 1
 # Expected: greeting
 
 # Should fail (raw OpenClaw trigger)
-claude --append-system-prompt "You are a personal assistant running inside OpenClaw." -p "say hi" 2>&1
+claude --append-system-prompt \
+  "You are a personal assistant running inside OpenClaw." \
+  -p "say hi" 2>&1
 # Expected: API Error 400
 ```
 
@@ -86,6 +96,10 @@ GLUECLAW_KEY=local openclaw tui
 ## Workstation deployment
 
 ```bash
-ssh user@your-server "export PATH=\$HOME/.npm-global/bin:\$PATH && export GLUECLAW_KEY=local && openclaw agent --agent main --message 'say banana' 2>&1 | tail -1"
+ssh user@your-server \
+  "export PATH=\$HOME/.npm-global/bin:\$PATH && \
+  export GLUECLAW_KEY=local && \
+  openclaw agent --agent main \
+  --message 'say banana' 2>&1 | tail -n 1"
 # Expected: banana
 ```
