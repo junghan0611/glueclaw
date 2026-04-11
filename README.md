@@ -34,11 +34,11 @@ The only way this breaks is if Anthropic changes how `--system-prompt` or `--out
 
 ## Models
 
-| Model | Claude Model | Context |
-|-------|-------------|---------|
-| `glueclaw/glueclaw-opus` | Opus 4.6 | 1M |
-| `glueclaw/glueclaw-sonnet` | Sonnet 4.6 | 1M |
-| `glueclaw/glueclaw-haiku` | Haiku 4.5 | 200k |
+| Model                      | Claude Model | Context |
+| -------------------------- | ------------ | ------- |
+| `glueclaw/glueclaw-opus`   | Opus 4.6     | 1M      |
+| `glueclaw/glueclaw-sonnet` | Sonnet 4.6   | 1M      |
+| `glueclaw/glueclaw-haiku`  | Haiku 4.5    | 200k    |
 
 Switch in TUI: `/model glueclaw/glueclaw-opus`
 
