@@ -104,7 +104,8 @@ describe.skipIf(!runLive)("Stream live — Max plan auth", () => {
       } as any;
 
       const events1: Array<{ type: string; [key: string]: unknown }> = [];
-      for await (const event of streamFn1(model, ctx1, {})) {
+      const stream1 = await streamFn1(model, ctx1, {});
+      for await (const event of stream1) {
         events1.push(event as any);
       }
       const done1 = events1.find((e) => e.type === "done");
@@ -126,7 +127,8 @@ describe.skipIf(!runLive)("Stream live — Max plan auth", () => {
       } as any;
 
       const events2: Array<{ type: string; [key: string]: unknown }> = [];
-      for await (const event of streamFn2(model, ctx2, {})) {
+      const stream2 = await streamFn2(model, ctx2, {});
+      for await (const event of stream2) {
         events2.push(event as any);
       }
 
