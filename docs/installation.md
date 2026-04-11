@@ -2,9 +2,9 @@
 
 ## Prerequisites
 
-- [OpenClaw](https://docs.openclaw.ai) (2026.4.2+)
-- [Claude Code](https://claude.ai/claude-code) logged in with a Max subscription
-- Node.js and npm
+- [OpenClaw](https://docs.openclaw.ai) 2026.4.2+
+- [Claude Code](https://claude.ai/claude-code) logged in with Max
+- Node.js 18+
 
 ## Install
 
@@ -13,23 +13,30 @@ git clone https://github.com/zeulewan/glueclaw.git \
   && cd glueclaw && bash install.sh
 ```
 
-The installer is idempotent and safe to re-run after OpenClaw updates.
+The installer is idempotent. Re-run after OpenClaw updates to re-apply patches.
 
 ## What the installer does
 
-1. Installs npm dependencies (`@mariozechner/pi-ai`,
-   `@mariozechner/pi-agent-core`)
-2. Adds `GLUECLAW_KEY=local` to your shell profile
-3. Registers the plugin with OpenClaw (with fallback for older versions)
+1. Installs npm dependencies
+2. Adds `GLUECLAW_KEY=local` to shell profile
+3. Registers the plugin with OpenClaw
 4. Configures models and `gateway.tools.allow`
-5. Writes an auth profile to `~/.openclaw/agents/main/agent/auth-profiles.json`
-6. Patches one file in OpenClaw's dist (`server-*.js`) to expose the MCP
-   loopback token. A `.glueclaw-bak` backup is created.
+5. Writes auth profile to `~/.openclaw/agents/main/agent/auth-profiles.json`
+6. Patches `server-*.js` in OpenClaw's dist to expose the MCP loopback token
+   (backup created as `.glueclaw-bak`)
 7. Starts the gateway on port 18789
 
-## Uninstall
+## Verify
 
-Switch to another model and restore the patched file from backup:
+```bash
+export GLUECLAW_KEY=local
+openclaw agent --agent main \
+  --message "say banana" 2>&1 | tail -n 1
+```
+
+Expected output: `banana`
+
+## Uninstall
 
 ```bash
 openclaw config set agents.defaults.model \
@@ -41,13 +48,3 @@ node_modules/openclaw/dist" && \
   done
 openclaw gateway restart
 ```
-
-## Re-running the installer
-
-Running `bash install.sh` again is safe at any time:
-
-- Dependencies are updated, not duplicated
-- Shell profile export is only added once
-- Plugin registration overwrites previous config
-- The MCP patch is skipped if already applied
-- The gateway is restarted cleanly
