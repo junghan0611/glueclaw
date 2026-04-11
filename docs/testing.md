@@ -50,8 +50,8 @@ RUN_LIVE_TESTS=1 npm test          # everything (~32s)
 
 ```bash
 export GLUECLAW_KEY=local
-openclaw agent --agent main --message "say banana" 2>&1 | tail -n 1
-# Expected: banana
+openclaw agent --agent main --message "say pong" 2>&1 | tail -n 1
+# Expected: pong
 ```
 
 ### Multi-turn memory

@@ -39,7 +39,7 @@ async function collectEvents(
     } as any;
 
     const messages = [
-      { role: "user" as const, content: opts?.prompt ?? "say banana" },
+      { role: "user" as const, content: opts?.prompt ?? "say pong" },
     ];
     const context = {
       systemPrompt: opts?.systemPrompt ?? "",
@@ -74,7 +74,7 @@ describe("createClaudeCliStreamFn integration", () => {
     const deltas = events.filter((e) => e.type === "text_delta");
     expect(deltas.length).toBeGreaterThanOrEqual(2);
     const deltaTexts = deltas.map((d) => d.delta as string);
-    expect(deltaTexts.join("")).toContain("banana");
+    expect(deltaTexts.join("")).toContain("pong");
   });
 
   it("assistant scenario: handles assistant message fallback", async () => {
@@ -196,7 +196,7 @@ async function launchStream(
   } as any;
   const context = {
     systemPrompt: "",
-    messages: [{ role: "user" as const, content: "say banana" }],
+    messages: [{ role: "user" as const, content: "say pong" }],
   } as any;
   const stream = await streamFn(model, context, {});
   const events: Array<{ type: string; [key: string]: unknown }> = [];

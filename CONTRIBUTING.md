@@ -34,7 +34,7 @@ commitlint check.
 
 See [docs/testing.md](docs/testing.md). At minimum:
 
-- `openclaw agent --agent main --message "say banana"` returns text
+- `openclaw agent --agent main --message "say pong"` returns `pong`
 - TUI multi-turn works
 - No zombie claude processes after messages
 

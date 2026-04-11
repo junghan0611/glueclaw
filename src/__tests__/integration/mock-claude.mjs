@@ -21,7 +21,7 @@ switch (scenario) {
     emit({
       type: "result",
       session_id: sessionId,
-      result: "banana",
+      result: "pong",
       usage: { input_tokens: 10, output_tokens: 5 },
     });
     break;
@@ -30,16 +30,16 @@ switch (scenario) {
     emit({ type: "system", subtype: "init", session_id: sessionId });
     emit({
       type: "stream_event",
-      event: { delta: { type: "text_delta", text: "ban" } },
+      event: { delta: { type: "text_delta", text: "po" } },
     });
     emit({
       type: "stream_event",
-      event: { delta: { type: "text_delta", text: "ana" } },
+      event: { delta: { type: "text_delta", text: "ng" } },
     });
     emit({
       type: "result",
       session_id: sessionId,
-      result: "banana",
+      result: "pong",
       usage: { input_tokens: 10, output_tokens: 5 },
     });
     break;
