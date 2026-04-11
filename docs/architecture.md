@@ -21,6 +21,15 @@ GlueClaw does not use API keys. In `src/stream.ts`, the subprocess environment i
 
 The plugin registers with a synthetic auth key (`glueclaw-local`) so OpenClaw's auth system is satisfied without real credentials.
 
+## Resiliency
+
+- **Request timeout** — each stream has a 120s timeout (`REQUEST_TIMEOUT_MS`). If the CLI hangs, the process is killed and an error event emitted.
+- **SIGKILL fallback** — after SIGTERM, a 5s grace period allows cleanup. If the process is still alive, SIGKILL is sent.
+- **Atomic session writes** — `sessions.json` is written to a `.tmp` file then renamed, preventing corruption on crash.
+- **Session eviction** — the session map is capped at 1000 entries. Oldest sessions are evicted on overflow.
+- **Stderr capture** — CLI stderr is collected and included in error events for diagnostics (auth failures, rate limits).
+- **Concurrent safety** — parallel streams with different session keys are independent. Same-key concurrent access uses last-writer-wins semantics without corruption.
+
 ## Detection scrubbing
 
 OpenClaw's system prompt contains tokens that Anthropic's API rejects. `scrubPrompt()` rewrites them before sending to the CLI, `unscrubResponse()` reverses them in responses.
@@ -93,10 +102,10 @@ Re-run after OpenClaw updates to re-apply the MCP patch.
 
 ## Test coverage
 
-54 automated tests across 3 layers. See [testing](testing.md) for details.
+61 automated tests across 3 layers. See [testing](testing.md) for details.
 
 | Layer | Tests | What it validates |
 |-------|-------|-------------------|
 | Unit | 37 | `scrubPrompt`, `unscrubResponse`, `buildUsage`, `buildMsg`, `getMcpLoopback`, `writeMcpConfig` |
-| Integration | 10 | `createClaudeCliStreamFn` with mock CLI — 9 NDJSON scenarios |
+| Integration | 17 | Mock CLI (11 NDJSON scenarios), request timeout, stderr capture, 4 concurrency tests |
 | E2E | 7 | Real Claude CLI with Max plan OAuth, session resume, OpenClaw plugin registration |

@@ -41,7 +41,7 @@ Expected: `banana`
 
 ## Test suite
 
-54 automated tests, 0 skipped. Covers unit, integration, and end-to-end including real Claude CLI with Max plan auth and session resume.
+61 automated tests, 0 skipped. Covers unit, integration (including concurrency and timeout), and end-to-end with real Claude CLI on Max plan auth.
 
 ```bash
 npm test                        # unit + integration (~1s)
