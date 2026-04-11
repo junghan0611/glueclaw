@@ -1,6 +1,6 @@
 {
   "name": "@zeulewan/glueclaw-provider",
-  "version": "2026.4.5",
+  "version": "1.0.0",
   "description": "GlueClaw - Claude CLI subprocess provider for Max subscription",
   "type": "module",
   "engines": {
