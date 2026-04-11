@@ -5,12 +5,30 @@ import {
 import { createClaudeCliStreamFn } from "./src/stream.js";
 
 const PROVIDER_ID = "glueclaw";
+const PROVIDER_LABEL = "GlueClaw";
+const BASE_URL = "local://glueclaw";
+const API_FORMAT = "anthropic-messages";
+const AUTH_KEY = "glueclaw-local";
+const AUTH_SOURCE = "claude CLI (local auth)";
+
+const MODEL_MAP: Readonly<Record<string, string>> = {
+  "glueclaw-opus": "claude-opus-4-6",
+  "glueclaw-sonnet": "claude-sonnet-4-6",
+  "glueclaw-haiku": "claude-haiku-4-5",
+};
 
 export default definePluginEntry({
-  register(api: OpenClawPluginApi) {
+  register(api: OpenClawPluginApi): void {
+    const authProfile = () =>
+      ({
+        apiKey: AUTH_KEY,
+        source: AUTH_SOURCE,
+        mode: "api-key" as const,
+      }) as const;
+
     api.registerProvider({
       id: PROVIDER_ID,
-      label: "GlueClaw",
+      label: PROVIDER_LABEL,
       aliases: ["sc"],
       envVars: ["GLUECLAW_KEY"],
       auth: [
@@ -18,23 +36,15 @@ export default definePluginEntry({
           method: "local",
           label: "Local Claude CLI",
           hint: "Uses your locally installed claude binary",
-          authenticate: async () => ({
-            apiKey: "glueclaw-local",
-            source: "claude CLI (local auth)",
-            mode: "api-key" as const,
-          }),
-          authenticateNonInteractive: async () => ({
-            apiKey: "glueclaw-local",
-            source: "claude CLI (local auth)",
-            mode: "api-key" as const,
-          }),
+          authenticate: async () => authProfile(),
+          authenticateNonInteractive: async () => authProfile(),
         },
       ],
       catalog: {
         run: async () => ({
           provider: {
-            baseUrl: "local://glueclaw",
-            api: "anthropic-messages",
+            baseUrl: BASE_URL,
+            api: API_FORMAT,
             models: [
               {
                 id: "glueclaw-opus",
@@ -59,21 +69,15 @@ export default definePluginEntry({
         }),
       },
       createStreamFn: (ctx: { modelId: string; agentDir?: string }) => {
-        // Map our friendly names to real claude model IDs
-        const modelMap: Record<string, string> = {
-          "glueclaw-opus": "claude-opus-4-6",
-          "glueclaw-sonnet": "claude-sonnet-4-6",
-          "glueclaw-haiku": "claude-haiku-4-5",
-        };
-        const realModel = modelMap[ctx.modelId] ?? ctx.modelId;
+        const realModel = MODEL_MAP[ctx.modelId] ?? ctx.modelId;
         return createClaudeCliStreamFn({
           sessionKey: ctx.agentDir ?? "default",
           modelOverride: realModel,
         });
       },
       resolveSyntheticAuth: () => ({
-        apiKey: "glueclaw-local",
-        source: "claude CLI (local auth)",
+        apiKey: AUTH_KEY,
+        source: AUTH_SOURCE,
         mode: "api-key",
       }),
       augmentModelCatalog: () => [

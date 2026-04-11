@@ -4,6 +4,14 @@
   "private": true,
   "description": "GlueClaw - Claude CLI subprocess provider for Max subscription",
   "type": "module",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "format": "prettier --check .",
+    "format:fix": "prettier --write ."
+  },
   "openclaw": {
     "extensions": [
       "./index.ts"
@@ -12,5 +20,9 @@
   "dependencies": {
     "@mariozechner/pi-agent-core": "^0.65.2",
     "@mariozechner/pi-ai": "^0.65.2"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.7.0"
   }
 }

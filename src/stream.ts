@@ -8,6 +8,23 @@ import { createAssistantMessageEventStream } from "@mariozechner/pi-ai";
 import type { StreamFn } from "@mariozechner/pi-agent-core";
 import type { AssistantMessage, Usage, TextContent } from "@mariozechner/pi-ai";
 
+const PROCESS_TIMEOUT_MS = 5000;
+
+/** Shape of NDJSON stream events from the Claude CLI. */
+interface StreamEventData {
+  type: string;
+  subtype?: string;
+  session_id?: string;
+  result?: string;
+  usage?: Record<string, number>;
+  event?: {
+    delta?: { type?: string; text?: string };
+  };
+  message?: {
+    content?: Array<{ type: string; text?: string }>;
+  };
+}
+
 /** Track claude session IDs per session key for multi-turn resume.
  *  Persisted to disk so sessions survive gateway restarts. */
 const GC_HOME = join(process.env.HOME ?? tmpdir(), ".glueclaw");
@@ -17,13 +34,19 @@ const sessionMap = new Map<string, string>();
 // Load persisted sessions on startup
 try {
   const saved = JSON.parse(readFileSync(SESSION_FILE, "utf8"));
-  for (const [k, v] of Object.entries(saved)) sessionMap.set(k, v as string);
-} catch {}
+  for (const [k, v] of Object.entries(saved)) {
+    if (typeof v === "string") sessionMap.set(k, v);
+  }
+} catch {
+  // Expected on first run when session file doesn't exist
+}
 
-function persistSessions() {
+function persistSessions(): void {
   try {
     writeFileSync(SESSION_FILE, JSON.stringify(Object.fromEntries(sessionMap)));
-  } catch {}
+  } catch {
+    // Best-effort persistence — non-fatal if disk write fails
+  }
 }
 
 function buildUsage(raw?: Record<string, number>): Usage {
@@ -93,7 +116,9 @@ function writeMcpConfig(port: number): { path: string; cleanup: () => void } {
     cleanup: () => {
       try {
         rmSync(dir, { recursive: true });
-      } catch {}
+      } catch {
+        // Temp dir cleanup is best-effort
+      }
     },
   };
 }
@@ -232,18 +257,19 @@ export function createClaudeCliStreamFn(opts: {
 
         for await (const line of rl) {
           if (!line.trim()) continue;
-          let data: Record<string, unknown>;
+          let data: StreamEventData;
           try {
-            data = JSON.parse(line);
+            data = JSON.parse(line) as StreamEventData;
           } catch {
+            // Skip malformed NDJSON lines
             continue;
           }
 
-          const type = data.type as string;
+          const type = data.type;
 
           // Capture session ID for resume
           if (type === "system" && data.subtype === "init") {
-            const sid = data.session_id as string;
+            const sid = data.session_id;
             if (sid) {
               sessionMap.set(sessionKey, sid);
               persistSessions();
@@ -253,7 +279,7 @@ export function createClaudeCliStreamFn(opts: {
 
           // Stream text deltas
           if (type === "stream_event") {
-            const delta = (data.event as any)?.delta;
+            const delta = data.event?.delta;
             if (delta?.type === "text_delta" && delta.text) {
               startStream();
               streamed = true;
@@ -275,14 +301,11 @@ export function createClaudeCliStreamFn(opts: {
           // Complete assistant message - only use if we didn't get streaming deltas
           if (type === "assistant") {
             if (!started) {
-              const content = (data.message as any)?.content as
-                | Array<Record<string, unknown>>
-                | undefined;
+              const content = data.message?.content;
               if (content) {
                 const textBlocks = content
-                  .filter((b) => b.type === "text")
-                  .map((b) => b.text as string)
-                  .filter(Boolean);
+                  .filter((b) => b.type === "text" && b.text)
+                  .map((b) => b.text ?? "");
                 if (textBlocks.length > 0) {
                   const fullText = textBlocks.join("\n");
                   startStream();
@@ -301,14 +324,14 @@ export function createClaudeCliStreamFn(opts: {
 
           // Result event (final) - authoritative response
           if (type === "result") {
-            const sid = data.session_id as string;
+            const sid = data.session_id;
             if (sid) {
               sessionMap.set(sessionKey, sid);
               persistSessions();
             }
             // Only use result text if nothing came through streaming or assistant
             if (!text) {
-              const resultText = data.result as string;
+              const resultText = data.result;
               if (resultText) {
                 startStream();
                 text = resultText;
@@ -320,7 +343,7 @@ export function createClaudeCliStreamFn(opts: {
                 });
               }
             }
-            endStream(data.usage as Record<string, number> | undefined);
+            endStream(data.usage);
             rl.close();
             proc.kill("SIGTERM");
             break;
@@ -330,7 +353,7 @@ export function createClaudeCliStreamFn(opts: {
         // Wait for process exit with timeout
         await Promise.race([
           new Promise<void>((r) => proc.on("close", () => r())),
-          new Promise<void>((r) => setTimeout(r, 5000)),
+          new Promise<void>((r) => setTimeout(r, PROCESS_TIMEOUT_MS)),
         ]);
         if (!ended) endStream();
       } catch (err) {
