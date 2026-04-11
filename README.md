@@ -4,6 +4,8 @@ Glue Claude back into OpenClaw. **May be buggy!.**
 
 Uses the official Claude CLI and scrubs out [Anthropic's detection triggers](DETECTION_PATTERNS.md) from the system prompt due to [Anthropic not allowing its use](https://iili.io/BuL3tKN.png). Tested with Telegram. As far as I can tell all functions work such as heartbeats.
 
+[My X post](https://x.com/zeulewan/status/2042769065408680223)
+
 ## Install
 
 Requires [OpenClaw](https://docs.openclaw.ai) and [Claude Code](https://claude.ai/claude-code) logged in with Max. Non-destructive, won't touch your existing config or sessions. Works with OpenClaw 2026.4.2+.
