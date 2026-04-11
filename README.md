@@ -6,6 +6,8 @@ Claude Max subscription instead of API keys.
 Scrubs [Anthropic's detection triggers](docs/detection-patterns.md) from the
 OpenClaw system prompt so the Claude CLI accepts it.
 
+[My X post](https://x.com/zeulewan/status/2042769065408680223)
+
 ## Install
 
 Requires [OpenClaw](https://docs.openclaw.ai) 2026.4.2+ and
