@@ -2,7 +2,7 @@
 
 Glue Claude back into OpenClaw. **Experimental** - may be buggy.
 
-Uses the official Claude CLI and scrubs out [Anthropic's detection triggers](docs/detection-patterns.md) from the system prompt due to [Anthropic not allowing its use](https://iili.io/BuL3tKN.png). Tested with Telegram, but heartbeats and some other features remain to be tested. (tool calls dont show up in the TUI)
+Uses the official Claude CLI and scrubs out [Anthropic's detection triggers](docs/detection-patterns.md) from the system prompt due to [Anthropic not allowing its use](https://iili.io/BuL3tKN.png). Tested with Telegram. As far as I can tell all functions work such as heartbeats.
 
 [X post](https://x.com/zeulewan/status/2042769065408680223)
 
