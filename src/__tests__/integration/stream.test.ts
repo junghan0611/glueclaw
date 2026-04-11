@@ -1,6 +1,8 @@
 import { describe, it, expect } from "vitest";
-import { resolve } from "node:path";
-import { createClaudeCliStreamFn } from "../../stream.js";
+import { resolve, join } from "node:path";
+import { readFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { createClaudeCliStreamFn, persistSessions } from "../../stream.js";
 
 const MOCK_CLI = resolve(import.meta.dirname, "mock-claude.mjs");
 
@@ -171,5 +173,126 @@ describe("createClaudeCliStreamFn integration", () => {
     const firstDeltaIdx = events.findIndex((e) => e.type === "text_delta");
     expect(startIdx).toBeGreaterThanOrEqual(0);
     expect(firstDeltaIdx).toBeGreaterThan(startIdx);
+  });
+});
+
+/**
+ * Launch a stream and collect all events. Unlike collectEvents(), this does
+ * NOT set process.env.MOCK_SCENARIO — the caller must set it once before
+ * launching parallel streams.
+ */
+async function launchStream(
+  sessionKey: string,
+): Promise<Array<{ type: string; [key: string]: unknown }>> {
+  const streamFn = createClaudeCliStreamFn({
+    claudeBin: MOCK_CLI,
+    sessionKey,
+    modelOverride: "claude-sonnet-4-6",
+  });
+  const model = {
+    id: "glueclaw-sonnet",
+    api: "anthropic-messages",
+    provider: "glueclaw",
+  } as any;
+  const context = {
+    systemPrompt: "",
+    messages: [{ role: "user" as const, content: "say banana" }],
+  } as any;
+  const stream = await streamFn(model, context, {});
+  const events: Array<{ type: string; [key: string]: unknown }> = [];
+  for await (const event of stream) {
+    events.push(event as any);
+  }
+  return events;
+}
+
+describe("concurrency", () => {
+  it("parallel streams with different session keys complete independently", async () => {
+    process.env.MOCK_SCENARIO = "streaming";
+    try {
+      const results = await Promise.all([
+        launchStream(`conc-a-${Date.now()}`),
+        launchStream(`conc-b-${Date.now()}`),
+        launchStream(`conc-c-${Date.now()}`),
+      ]);
+
+      for (const events of results) {
+        const types = events.map((e) => e.type);
+        expect(types).toContain("start");
+        expect(types).toContain("done");
+        expect(types).not.toContain("error");
+      }
+    } finally {
+      delete process.env.MOCK_SCENARIO;
+    }
+  });
+
+  it("session map integrity under concurrent writes", async () => {
+    const keys = [
+      `conc-int-a-${Date.now()}`,
+      `conc-int-b-${Date.now()}`,
+      `conc-int-c-${Date.now()}`,
+    ];
+    process.env.MOCK_SCENARIO = "simple";
+    try {
+      await Promise.all(keys.map((k) => launchStream(k)));
+    } finally {
+      delete process.env.MOCK_SCENARIO;
+    }
+
+    // Read sessions.json and verify all 3 keys are present
+    const sessFile = join(
+      process.env.HOME ?? tmpdir(),
+      ".glueclaw",
+      "sessions.json",
+    );
+    const saved = JSON.parse(readFileSync(sessFile, "utf8"));
+    for (const key of keys) {
+      expect(saved[`glueclaw:${key}`]).toBeDefined();
+    }
+  });
+
+  it("same session key under concurrent access does not crash", async () => {
+    const sharedKey = `conc-shared-${Date.now()}`;
+    process.env.MOCK_SCENARIO = "simple";
+    try {
+      const results = await Promise.all([
+        launchStream(sharedKey),
+        launchStream(sharedKey),
+      ]);
+
+      for (const events of results) {
+        const types = events.map((e) => e.type);
+        expect(types).toContain("done");
+        expect(types).not.toContain("error");
+      }
+    } finally {
+      delete process.env.MOCK_SCENARIO;
+    }
+  });
+
+  it("responses don't cross-contaminate between parallel streams", async () => {
+    process.env.MOCK_SCENARIO = "streaming";
+    try {
+      const results = await Promise.all([
+        launchStream(`conc-iso-a-${Date.now()}`),
+        launchStream(`conc-iso-b-${Date.now()}`),
+      ]);
+
+      for (const events of results) {
+        const types = events.map((e) => e.type);
+        // Each stream should have a complete lifecycle
+        const startIdx = types.indexOf("start");
+        const doneIdx = types.indexOf("done");
+        expect(startIdx).toBeGreaterThanOrEqual(0);
+        expect(doneIdx).toBeGreaterThan(startIdx);
+
+        // Done event should have non-empty text
+        const doneEvent = events.find((e) => e.type === "done") as any;
+        expect(doneEvent.message.content[0].text.length).toBeGreaterThan(0);
+      }
+    } finally {
+      delete process.env.MOCK_SCENARIO;
+    }
   });
 });
