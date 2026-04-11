@@ -9,6 +9,8 @@ search_enabled: true
 aux_links:
   "GitHub":
     - "https://github.com/zeulewan/glueclaw"
+  "X Post":
+    - "https://x.com/zeulewan/status/2042769065408680223"
 aux_links_new_tab: true
 
 plugins:
