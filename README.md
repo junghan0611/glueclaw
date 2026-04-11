@@ -30,7 +30,7 @@ claude --dangerously-skip-permissions -p \
     "<user message>"
 ```
 
-For this to stop working, they'd have to block the json streaming mode or the custom system prompt mode.
+The only way this breaks is if Anthropic changes how `--system-prompt` or `--output-format stream-json` work, which would affect all Claude Code integrations.
 
 ## Models
 
