@@ -1,8 +1,9 @@
-# GlueClaw Health Check
+# Health Check
 
-Run this prompt daily (or as a cron job) to verify GlueClaw still works. If it
-fails, follow the binary search procedure in DETECTION_PATTERNS.md to find and
-scrub the new trigger.
+Run this daily (or as a cron job) to verify GlueClaw still works. If it fails,
+follow the binary search procedure in
+[detection-patterns.md](detection-patterns.md) to find and scrub the new
+trigger.
 
 ## Quick check
 
@@ -10,7 +11,7 @@ scrub the new trigger.
 export GLUECLAW_KEY=local
 openclaw agent --agent main \
   --message "say the word pineapple and nothing else" \
-  2>&1 | tail -1
+  2>&1 | tail -n 1
 ```
 
 If you see `pineapple`, it works. If you see `API Error: 400`, Anthropic added a
@@ -29,7 +30,7 @@ Run these tests and report results:
 2. GlueClaw via openclaw agent:
    GLUECLAW_KEY=local openclaw agent \
      --agent main \
-     --message "say pineapple" 2>&1 | tail -1
+     --message "say pineapple" 2>&1 | tail -n 1
 
 3. If test 2 fails, dump the system prompt:
    - Add this line to stream.ts after scrub chain:
@@ -46,9 +47,9 @@ Run these tests and report results:
        --system-prompt-file /tmp/gc-test.txt \
        "say hi" < /dev/null 2>&1
    - Find the line that tips it over
-   - Check DETECTION_PATTERNS.md for known triggers
+   - Check detection-patterns.md for known triggers
    - Add a new .replace() to the scrub chain
-   - Update DETECTION_PATTERNS.md with new trigger
+   - Update detection-patterns.md with new trigger
    - Commit and push
 
 Report: which tests passed, which failed, and if

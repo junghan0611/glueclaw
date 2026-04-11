@@ -3,9 +3,10 @@
 Glue Claude back into OpenClaw. **May be buggy!.**
 
 Uses the official Claude CLI and scrubs out
-[Anthropic's detection triggers](DETECTION_PATTERNS.md) from the system prompt
-due to [Anthropic not allowing its use](https://iili.io/BuL3tKN.png). Tested
-with Telegram. As far as I can tell all functions work such as heartbeats.
+[Anthropic's detection triggers](docs/detection-patterns.md) from the system
+prompt due to [Anthropic not allowing its use](https://iili.io/BuL3tKN.png).
+Tested with Telegram. As far as I can tell all functions work such as
+heartbeats.
 
 ## Install
 
@@ -19,22 +20,8 @@ git clone https://github.com/zeulewan/glueclaw.git \
   && cd glueclaw && bash install.sh
 ```
 
-## How it works
-
-Uses the official Claude CLI:
-
-```bash
-claude --dangerously-skip-permissions -p \
-    --output-format stream-json \
-    --verbose --include-partial-messages \
-    --system-prompt <scrubbed prompt> \
-    --model <model> \
-    --resume <session-id> \
-    "<user message>"
-```
-
-For this to stop working, they'd have to block the json streaming mode or the
-custom system prompt mode.
+See [docs/installation.md](docs/installation.md) for uninstall and details on
+what the installer does.
 
 ## Models
 
@@ -53,7 +40,7 @@ Switch in TUI: `/model glueclaw/glueclaw-opus`
   via `/model`
 - The installer patches one file in OpenClaw's dist (`server-*.js`) to expose
   the MCP loopback token to plugins. A `.glueclaw-bak` backup is created.
-  Updating OpenClaw (`npm install -g openclaw`) restores the original - just
+  Updating OpenClaw (`npm install -g openclaw`) restores the original -- just
   re-run `bash install.sh` to re-apply the patch.
 
 ## Disclaimer
@@ -63,17 +50,14 @@ engineering, no credential extraction, no API spoofing. It's your Max
 subscription, your `claude` binary, your machine. Use at your own risk. Not
 affiliated with or endorsed by Anthropic or OpenClaw.
 
-## Uninstall
+## Documentation
 
-Switch to another model and restore the patched file from backup:
-
-```bash
-openclaw config set agents.defaults.model \
-  anthropic/claude-sonnet-4-6
-cd "$(dirname "$(which openclaw)")/../lib/\
-node_modules/openclaw/dist" && \
-  for f in *.glueclaw-bak; do \
-    [ -f "$f" ] && mv "$f" "${f%.glueclaw-bak}"; \
-  done
-openclaw gateway restart
-```
+- [Installation](docs/installation.md) -- install, uninstall, and what the
+  installer does
+- [Architecture](docs/architecture.md) -- how GlueClaw works under the hood
+- [Testing](docs/testing.md) -- test procedures for all features
+- [Health Check](docs/healthcheck.md) -- daily monitoring and troubleshooting
+- [Detection Patterns](docs/detection-patterns.md) -- Anthropic trigger
+  documentation and binary search procedure
+- [Roadmap](docs/roadmap.md) -- known issues and future plans
+- [Contributing](CONTRIBUTING.md) -- developer setup and workflow

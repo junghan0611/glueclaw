@@ -16,12 +16,14 @@ subprocess and translates between Claude Code's stream-json format and
 OpenClaw's AssistantMessageEventStream.
 
 The key challenge is Anthropic's detection of OpenClaw system prompts. The scrub
-chain in `src/stream.ts` removes known triggers. See `DETECTION_PATTERNS.md` for
-documented triggers and the binary search procedure for finding new ones.
+chain in `src/stream.ts` removes known triggers. See
+[docs/detection-patterns.md](docs/detection-patterns.md) for documented triggers
+and the binary search procedure for finding new ones.
 
 ## Testing
 
-See `TESTS.md` for test procedures. At minimum, verify:
+See [docs/testing.md](docs/testing.md) for full test procedures. At minimum,
+verify:
 
 - `openclaw agent --agent main --message "say banana"` returns text
 - TUI multi-turn works
@@ -31,11 +33,13 @@ See `TESTS.md` for test procedures. At minimum, verify:
 
 When Anthropic adds a new trigger:
 
-1. Follow the binary search in `DETECTION_PATTERNS.md`
+1. Follow the binary search in
+   [docs/detection-patterns.md](docs/detection-patterns.md)
 2. Add a `.replace()` to the scrub chain in `src/stream.ts`
 3. If the token needs round-trip translation (like HEARTBEAT_OK), add the
    reverse in `endStream` and the streaming delta handler
-4. Update `DETECTION_PATTERNS.md` with the finding
+4. Update [docs/detection-patterns.md](docs/detection-patterns.md) with the
+   finding
 5. Test on both TUI and Telegram paths (they get different prompts)
 
 ## Common issues
@@ -57,4 +61,7 @@ When Anthropic adds a new trigger:
 - `index.ts` (70 lines) - plugin registration, nothing complex
 - `src/stream.ts` (220 lines) - all the logic: spawn, parse, scrub, translate,
   persist
-- `install.sh` (140 lines) - installer with cross-platform support
+- `install.sh` (210 lines) - installer with cross-platform support
+
+See [docs/architecture.md](docs/architecture.md) for a deeper technical
+overview.

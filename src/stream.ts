@@ -111,7 +111,7 @@ export function createClaudeCliStreamFn(opts: {
     const run = async () => {
       let mcpCleanup: (() => void) | undefined;
       try {
-        // Scrub Anthropic detection triggers (see DETECTION_PATTERNS.md)
+        // Scrub Anthropic detection triggers (see docs/detection-patterns.md)
         const cleanPrompt = (context.systemPrompt ?? "")
           .replace(
             /personal assistant running inside OpenClaw/g,
