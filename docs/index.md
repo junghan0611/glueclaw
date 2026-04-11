@@ -36,7 +36,7 @@ Expected: `banana`
 | Model | Engine | Context |
 |-------|--------|---------|
 | `glueclaw/glueclaw-opus` | Claude Opus 4.6 | 1M |
-| `glueclaw/glueclaw-sonnet` | Claude Sonnet 4.6 | 200k |
+| `glueclaw/glueclaw-sonnet` | Claude Sonnet 4.6 | 1M |
 | `glueclaw/glueclaw-haiku` | Claude Haiku 4.5 | 200k |
 
 ## Test suite

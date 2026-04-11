@@ -187,7 +187,7 @@ fi
 echo "[4/7] Configuring models..."
 # These two are fatal — without them, nothing works
 oc_config models.providers.glueclaw \
-  '{"baseUrl":"local://glueclaw","models":[{"id":"glueclaw-opus","name":"GlueClaw Opus","contextWindow":1000000},{"id":"glueclaw-sonnet","name":"GlueClaw Sonnet","contextWindow":200000},{"id":"glueclaw-haiku","name":"GlueClaw Haiku","contextWindow":200000}]}' \
+  '{"baseUrl":"local://glueclaw","models":[{"id":"glueclaw-opus","name":"GlueClaw Opus","contextWindow":1000000},{"id":"glueclaw-sonnet","name":"GlueClaw Sonnet","contextWindow":1000000},{"id":"glueclaw-haiku","name":"GlueClaw Haiku","contextWindow":200000}]}' \
   || die "Failed to configure models"
 oc_config gateway.mode local || die "Failed to set gateway mode"
 # Default model — warn only, user can set manually
@@ -288,7 +288,7 @@ echo "  GlueClaw installed!"
 echo ""
 echo "  Models:"
 echo "    glueclaw/glueclaw-opus    Opus 4.6   1M ctx"
-echo "    glueclaw/glueclaw-sonnet  Sonnet 4.6 200k ctx"
+echo "    glueclaw/glueclaw-sonnet  Sonnet 4.6 1M ctx"
 echo "    glueclaw/glueclaw-haiku   Haiku 4.5  200k ctx"
 echo ""
 echo "  Default: glueclaw/glueclaw-sonnet"
