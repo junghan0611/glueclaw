@@ -26,7 +26,6 @@ binary, using your Claude Max subscription instead of API keys.
   session persistence, token translation
 - `install.sh` - automated installer: deps, plugin registration, model config,
   auth, gateway MCP patch
-- `get.sh` - curl bootstrap (clones repository then runs install.sh)
 - `openclaw.plugin.json` - plugin manifest
 - `DETECTION_PATTERNS.md` - documented Anthropic triggers and binary search
   procedure
