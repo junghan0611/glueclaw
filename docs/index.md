@@ -37,10 +37,10 @@ The installer is idempotent. Re-run after OpenClaw updates to re-apply patches.
 ```bash
 export GLUECLAW_KEY=local
 openclaw agent --agent main \
-  --message "say banana" 2>&1 | tail -n 1
+  --message "say pong" 2>&1 | tail -n 1
 ```
 
-Expected: `banana`
+Expected: `pong`
 
 ## Models
 
