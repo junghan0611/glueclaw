@@ -146,7 +146,11 @@ BACKUP_FILE=""
 cleanup() {
   # Restore MCP patch backup if script failed mid-patch
   if [ -n "$BACKUP_FILE" ] && [ -f "$BACKUP_FILE" ]; then
-    mv "$BACKUP_FILE" "${BACKUP_FILE%.glueclaw-bak}" 2>/dev/null || true
+    if [ -w "$(dirname "$BACKUP_FILE")" ]; then
+      mv "$BACKUP_FILE" "${BACKUP_FILE%.glueclaw-bak}" 2>/dev/null || true
+    else
+      sudo mv "$BACKUP_FILE" "${BACKUP_FILE%.glueclaw-bak}" 2>/dev/null || true
+    fi
     echo "  Restored backup: $(basename "$BACKUP_FILE")" >&2
   fi
   if [ -n "$GW_PID" ] && kill -0 "$GW_PID" 2>/dev/null; then
@@ -218,12 +222,25 @@ write_auth_profile "$AUTH_FILE"
 echo "[6/7] Patching gateway for MCP bridge..."
 SERVER_FILE=$(grep -rl "mcp loopback listening" "$OPENCLAW_DIST"/*.js 2>/dev/null | head -n 1)
 [ -z "$SERVER_FILE" ] && die "Cannot find MCP loopback in OpenClaw dist — incompatible version?"
+
+# Use sudo for file operations if dist directory is not writable (global npm install)
+ELEVATE=""
+if [ ! -w "$OPENCLAW_DIST" ]; then
+  echo "  OpenClaw dist is root-owned, using sudo for patch..."
+  ELEVATE="sudo"
+fi
+
 if ! grep -q "__GLUECLAW_MCP" "$SERVER_FILE"; then
-  cp "$SERVER_FILE" "${SERVER_FILE}.glueclaw-bak" || die "Cannot backup $SERVER_FILE"
+  $ELEVATE cp "$SERVER_FILE" "${SERVER_FILE}.glueclaw-bak" || die "Cannot backup $SERVER_FILE"
   BACKUP_FILE="${SERVER_FILE}.glueclaw-bak"
   # shellcheck disable=SC2016
-  sedi 's/logDebug(`mcp loopback listening/process.env.__GLUECLAW_MCP_PORT = String(address.port); process.env.__GLUECLAW_MCP_TOKEN = token; logDebug(`mcp loopback listening/' "$SERVER_FILE" ||
-    die "Failed to patch $SERVER_FILE"
+  if [ -n "$ELEVATE" ]; then
+    $ELEVATE sed -i 's/logDebug(`mcp loopback listening/process.env.__GLUECLAW_MCP_PORT = String(address.port); process.env.__GLUECLAW_MCP_TOKEN = token; logDebug(`mcp loopback listening/' "$SERVER_FILE" ||
+      die "Failed to patch $SERVER_FILE"
+  else
+    sedi 's/logDebug(`mcp loopback listening/process.env.__GLUECLAW_MCP_PORT = String(address.port); process.env.__GLUECLAW_MCP_TOKEN = token; logDebug(`mcp loopback listening/' "$SERVER_FILE" ||
+      die "Failed to patch $SERVER_FILE"
+  fi
   # Validate the patch actually applied
   grep -q "__GLUECLAW_MCP_PORT" "$SERVER_FILE" || die "MCP patch did not apply — sed replacement failed"
   BACKUP_FILE=""  # Patch succeeded, don't restore on cleanup
