@@ -10,6 +10,7 @@
     "index.ts",
     "src/stream.ts",
     "src/catalog.ts",
+    "src/healthcheck.ts",
     "src/openclaw.d.ts",
     "openclaw.plugin.json",
     "install.sh",
@@ -31,6 +32,7 @@
     "test:integration": "vitest run src/__tests__/integration",
     "test:e2e": "vitest run src/__tests__/e2e",
     "typecheck": "tsc --noEmit",
+    "healthcheck": "npx tsx src/healthcheck.ts",
     "format": "prettier --check .",
     "format:fix": "prettier --write ."
   },

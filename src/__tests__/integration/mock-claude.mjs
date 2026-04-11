@@ -129,6 +129,24 @@ switch (scenario) {
     process.exit(1);
     break;
 
+  case "healthcheck": {
+    // Simulate Anthropic detection: reject if system prompt contains HEALTHCHECK_REJECT_LINE
+    const spIdx = process.argv.indexOf("--system-prompt");
+    const prompt = spIdx >= 0 ? (process.argv[spIdx + 1] ?? "") : "";
+    if (prompt.includes("HEALTHCHECK_REJECT_LINE")) {
+      process.stderr.write("Error: API 400 — content policy violation\n");
+      process.exit(1);
+    }
+    emit({ type: "system", subtype: "init", session_id: sessionId });
+    emit({
+      type: "result",
+      session_id: sessionId,
+      result: "pong",
+      usage: { input_tokens: 10, output_tokens: 1 },
+    });
+    break;
+  }
+
   default:
     process.stderr.write(`Unknown scenario: ${scenario}\n`);
     process.exit(1);
