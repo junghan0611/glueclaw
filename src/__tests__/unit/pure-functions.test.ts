@@ -7,6 +7,7 @@ import {
   getMcpLoopback,
 } from "../../stream.js";
 import { MODEL_CATALOG } from "../../catalog.js";
+import { binarySearchTrigger } from "../../healthcheck.js";
 
 describe("buildUsage", () => {
   it("returns zeroed usage when called with undefined", () => {
@@ -278,5 +279,82 @@ describe("MODEL_CATALOG", () => {
     for (const entry of MODEL_CATALOG) {
       expect(entry.provider).toBe("glueclaw");
     }
+  });
+});
+
+describe("binarySearchTrigger", () => {
+  it("returns the offending line when trigger is in first half", async () => {
+    const lines = ["safe line 1", "BADWORD here", "safe line 3", "safe line 4"];
+    const testFn = async (chunk: string) => !chunk.includes("BADWORD");
+    const result = await binarySearchTrigger(lines, testFn);
+    expect(result).toBe("BADWORD here");
+  });
+
+  it("returns the offending line when trigger is in second half", async () => {
+    const lines = [
+      "safe line 1",
+      "safe line 2",
+      "safe line 3",
+      "TRIGGER at end",
+    ];
+    const testFn = async (chunk: string) => !chunk.includes("TRIGGER");
+    const result = await binarySearchTrigger(lines, testFn);
+    expect(result).toBe("TRIGGER at end");
+  });
+
+  it("returns null when entire prompt passes", async () => {
+    const lines = ["safe line 1", "safe line 2", "safe line 3"];
+    const testFn = async () => true;
+    const result = await binarySearchTrigger(lines, testFn);
+    expect(result).toBeNull();
+  });
+
+  it("narrows to single line containing the trigger", async () => {
+    const lines = Array.from({ length: 20 }, (_, i) =>
+      i === 13 ? "line13bad" : `safe line ${i}`,
+    );
+    const testFn = async (chunk: string) => !chunk.includes("line13bad");
+    const result = await binarySearchTrigger(lines, testFn);
+    expect(result).toBe("line13bad");
+  });
+
+  it("calls testFn O(log n) times, not O(n)", async () => {
+    let callCount = 0;
+    const lines = Array.from({ length: 100 }, (_, i) =>
+      i === 50 ? "hidden-trigger" : `safe line ${i}`,
+    );
+    const testFn = async (chunk: string) => {
+      callCount++;
+      return !chunk.includes("hidden-trigger");
+    };
+    await binarySearchTrigger(lines, testFn);
+    // log2(100) ≈ 7, plus initial full-prompt test and some overhead
+    expect(callCount).toBeLessThan(20);
+  });
+
+  it("handles single-line input that triggers", async () => {
+    const testFn = async (chunk: string) => !chunk.includes("X");
+    const result = await binarySearchTrigger(["X"], testFn);
+    expect(result).toBe("X");
+  });
+
+  it("handles empty input", async () => {
+    const testFn = async () => true;
+    const result = await binarySearchTrigger([], testFn);
+    expect(result).toBeNull();
+  });
+
+  it("handles trigger on the first line", async () => {
+    const lines = ["TRIGGER", "safe", "safe", "safe"];
+    const testFn = async (chunk: string) => !chunk.includes("TRIGGER");
+    const result = await binarySearchTrigger(lines, testFn);
+    expect(result).toBe("TRIGGER");
+  });
+
+  it("handles trigger on the last line", async () => {
+    const lines = ["safe", "safe", "safe", "TRIGGER"];
+    const testFn = async (chunk: string) => !chunk.includes("TRIGGER");
+    const result = await binarySearchTrigger(lines, testFn);
+    expect(result).toBe("TRIGGER");
   });
 });
