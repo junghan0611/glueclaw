@@ -56,6 +56,7 @@ export async function runHealthcheck(opts: {
         "-p",
         "--output-format",
         "stream-json",
+        "--verbose",
         "--system-prompt",
         prompt,
         "--model",
