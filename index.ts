@@ -27,6 +27,21 @@ export default definePluginEntry({
         mode: "api-key" as const,
       }) as const;
 
+    const authResult = () =>
+      ({
+        profiles: [
+          {
+            profileId: `${PROVIDER_ID}:default`,
+            credential: {
+              type: "api_key" as const,
+              provider: PROVIDER_ID,
+              key: AUTH_KEY,
+            },
+          },
+        ],
+        notes: ["Uses local Claude CLI OAuth (Max subscription)."],
+      }) as const;
+
     api.registerProvider({
       id: PROVIDER_ID,
       label: PROVIDER_LABEL,
@@ -34,11 +49,12 @@ export default definePluginEntry({
       envVars: ["GLUECLAW_KEY"],
       auth: [
         {
-          method: "local",
+          id: "local",
           label: "Local Claude CLI",
           hint: "Uses your locally installed claude binary",
-          authenticate: async () => authProfile(),
-          authenticateNonInteractive: async () => authProfile(),
+          kind: "custom" as const,
+          run: async () => authResult(),
+          runNonInteractive: async () => authResult(),
         },
       ],
       catalog: {
